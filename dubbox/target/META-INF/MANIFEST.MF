@@ -1,0 +1,13 @@
+Manifest-Version: 1.0
+Implementation-Vendor: Lashou
+Implementation-Title: service-dubbox
+Implementation-Version: 1.0-SNAPSHOT
+Implementation-Vendor-Id: com.lashou
+Built-By: Administrator
+Build-Jdk: 1.7.0_45
+Specification-Vendor: Lashou
+Specification-Title: service-dubbox
+Created-By: Apache Maven 3.1.1
+Specification-Version: 1.0-SNAPSHOT
+Archiver-Version: Plexus Archiver
+
