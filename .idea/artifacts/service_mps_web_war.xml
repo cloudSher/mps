@@ -1,0 +1,8 @@
+<component name="ArtifactManager">
+  <artifact type="war" name="service-mps-web:war">
+    <output-path>$PROJECT_DIR$/mps-web/target</output-path>
+    <root id="archive" name="service-mps-web-1.0-SNAPSHOT.war">
+      <element id="artifact" artifact-name="service-mps-web:war exploded" />
+    </root>
+  </artifact>
+</component>
