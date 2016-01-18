@@ -16,13 +16,14 @@
     <name>${project.artifactId}</name>
     <description>The mps server of dubbox for restful api</description>
     <url>http://www.lashou.com</url>
+
     <!--models-->
     <modules>
-        <module>api</module>
-        <module>biz</module>
-        <module>dubbox</module>
-        <module>domain</module>
-        <module>web</module>
+        <module>mps-api</module>
+        <module>mps-biz</module>
+        <module>mps-dubbox</module>
+        <module>mps-domain</module>
+        <module>mps-web</module>
     </modules>
 
     <profiles>

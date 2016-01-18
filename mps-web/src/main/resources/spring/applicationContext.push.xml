@@ -1,0 +1,324 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:util="http://www.springframework.org/schema/util"
+       xsi:schemaLocation="
+         http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd   
+   http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.0.xsd
+   http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util-3.0.xsd">
+    <bean id="propertyConfigurer " class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+        <property name="locations">
+            <list>
+                <value>classpath*:properties/*.properties</value>
+            </list>
+        </property>
+        <property name="fileEncoding" value="UTF-8" />
+    </bean>
+    <context:annotation-config />
+
+    <context:component-scan base-package="com.dm"/>
+
+    <import resource="classpath*:spring/spring-context.service.api.xml" />
+    <util:map id="serviceApiMap">
+        <entry key="service.api.sms.douwn" value="${service.api.sms.down}" />
+        <entry key="service.api.voice.play" value="${service.api.voice.play}" />
+    </util:map>
+
+
+   <!-- <import resource="classpath*:spring/spring-context.framework.base.cache.xml" />
+    -->
+    <util:map id="expireSecondsMap">
+    </util:map>
+
+    <import resource="classpath*:spring/spring-config-dao.xml" />
+
+
+    <bean id="pushReqService" class="com.dm.service.mps.biz.impl.PushReqServiceImpl">
+        <property name="enterpriseId" value="${push.call.enterpriseId}"/>
+        <property name="pwd" value="${push.call.pwd}"/>
+        <property name="userName" value="${push.call.userName}"/>
+        <property name="hotline" value="${push.call.hotline}"/>
+    </bean>
+
+
+    <!-- ============================================================== -->
+    <!-- =========================Queue配置============================ -->
+    <!-- ============================================================== -->
+    <bean id="reqQueue" class="com.dm.service.mps.biz.message.queue.BasicQueue">
+        <property name="maxSize" value="5000" />
+    </bean>
+    <bean id="androidPushMessageQueue" class="com.dm.service.mps.biz.message.queue.BasicQueue">
+        <property name="maxSize" value="5000" />
+    </bean>
+    <bean id="iosPushMessageQueue" class="com.dm.service.mps.biz.message.queue.BasicQueue">
+        <property name="maxSize" value="5000" />
+    </bean>
+    <bean id="androidFeedbackQueue" class="com.dm.service.mps.biz.message.queue.BasicQueue">
+        <property name="maxSize" value="5000" />
+    </bean>
+    <bean id="smsMessageQueue" class="com.dm.service.mps.biz.message.queue.BasicQueue">
+        <property name="maxSize" value="5000" />
+    </bean>
+    <bean id="voiceMessageQueue" class="com.dm.service.mps.biz.message.queue.BasicQueue">
+        <property name="maxSize" value="500" />
+    </bean>
+    <bean id="invalidTokenQueue" class="com.dm.service.mps.biz.message.queue.BasicQueue">
+        <property name="maxSize" value="50" />
+    </bean>
+    <!-- ============================================================== -->
+    <!-- =========================Worker配置============================ -->
+    <!-- ============================================================== -->
+    <bean id="dispatchWorker" class="com.dm.service.mps.biz.message.worker.impl.DispatchWorker" scope="prototype">
+    </bean>
+    <bean id="androidPushWorker" class="com.dm.service.mps.biz.message.worker.impl.AndroidPushWorker" scope="prototype">
+        <property name="sender" ref="androidSender" />
+    </bean>
+    <bean id="iosPushWorker" class="com.dm.service.mps.biz.message.worker.impl.IOSPushWorker" scope="prototype">
+        <property name="sender" ref="iosSender" />
+    </bean>
+    <bean id="androidFeedbackWorker" class="com.dm.service.mps.biz.message.worker.impl.AndroidFeedbackWorker">
+        <property name="feedbacker" ref="androidFeedbacker" />
+        <property name="waitSeconds" value="${push.android.feedback.waitSeconds}" />
+        <property name="maxRepeatTimes" value="${push.android.feedback.maxRepeatTimes}" />
+    </bean>
+    <bean id="iosFeedbackWorker" class="com.dm.service.mps.biz.message.worker.impl.IOSFeedbackWorker">
+        <property name="feedbackerList">
+            <list>
+                <!--<bean class="com.dm.service.mps.service.message.feedback.impl.IOSFeedbacker" scope="prototype">-->
+                    <!--<property name="name" value="个人正式版"/>-->
+                    <!--<property name="certFileName" value="${push.ios.certFileName.4.person.prod}" />-->
+                    <!--<property name="certPwd" value="${push.ios.certPwd.4.person.prod}" />-->
+                    <!--<property name="prod" value="${push.ios.prod}" />-->
+                    <!--<property name="poolSize" value="${push.ios.feedbacker.poolsize}" />-->
+                <!--</bean>-->
+                <bean class="com.dm.service.mps.biz.message.feedback.impl.IOSFeedbacker" scope="prototype">
+                    <property name="name" value="个人版"/>
+                    <property name="certFileName" value="${push.ios.certFileName.4.person.dev}" />
+                    <property name="certPwd" value="${push.ios.certPwd.4.person.dev}" />
+                    <property name="prod" value="${push.ios.dev}" />
+                    <property name="poolSize" value="${push.ios.feedbacker.poolsize}" />
+                </bean>
+
+                <!--<bean class="com.dm.service.mps.service.message.feedback.impl.IOSFeedbacker" scope="prototype">-->
+                    <!--<property name="name" value="企业正式版"/>-->
+                    <!--<property name="certFileName" value="${push.ios.certFileName.4.corp.prod}" />-->
+                    <!--<property name="certPwd" value="${push.ios.certPwd.4.corp.prod}" />-->
+                    <!--<property name="prod" value="${push.ios.prod}" />-->
+                    <!--<property name="poolSize" value="${push.ios.feedbacker.poolsize}" />-->
+                <!--</bean>-->
+                <bean class="com.dm.service.mps.biz.message.feedback.impl.IOSFeedbacker" scope="prototype">
+                    <property name="name" value="企业开发版"/>
+                    <property name="certFileName" value="${push.ios.certFileName.4.corp.dev}" />
+                    <property name="certPwd" value="${push.ios.certPwd.4.corp.prod}" />
+                    <property name="prod" value="${push.ios.dev}" />
+                    <property name="poolSize" value="${push.ios.feedbacker.poolsize}" />
+                </bean>
+
+                <!--<bean class="com.dm.service.mps.service.message.feedback.impl.IOSFeedbacker" scope="prototype">-->
+                    <!--<property name="name" value="团队正式版"/>-->
+                    <!--<property name="certFileName" value="${push.ios.certFileName.4.team.prod}" />-->
+                    <!--<property name="certPwd" value="${push.ios.certPwd.4.team.prod}" />-->
+                    <!--<property name="prod" value="${push.ios.prod}" />-->
+                    <!--<property name="poolSize" value="${push.ios.feedbacker.poolsize}" />-->
+                <!--</bean>-->
+                <bean class="com.dm.service.mps.biz.message.feedback.impl.IOSFeedbacker" scope="prototype">
+                    <property name="name" value="团队开发版"/>
+                    <property name="certFileName" value="${push.ios.certFileName.4.team.dev}" />
+                    <property name="certPwd" value="${push.ios.certPwd.4.team.dev}" />
+                    <property name="prod" value="${push.ios.dev}" />
+                    <property name="poolSize" value="${push.ios.feedbacker.poolsize}" />
+                </bean>
+            </list>
+        </property>
+        <property name="feedbackInterval" value="${push.feedback.ios.interval}" />
+    </bean>
+    <bean id="smsWorker" class="com.dm.service.mps.biz.message.worker.impl.SmsWorker">
+        <property name="sender" ref="smsSender" />
+    </bean>
+    <bean id="voiceWorker" class="com.dm.service.mps.biz.message.worker.impl.VoiceWorker">
+        <property name="sender" ref="voiceSender" />
+    </bean>
+    <!-- ============================================================== -->
+    <!-- =========================SMS配置============================ -->
+    <!-- ============================================================== -->
+    <bean id="smsService" class="com.dm.service.mps.biz.message.sms.service.impl.SmsServiceImpl"/>
+    <bean id="smsFilter" class="com.dm.service.mps.biz.message.sms.controller.SmsFilter"/>
+    <bean id="gdSmsSenderPool" class="com.dm.service.mps.biz.message.sms.guodu.GDSmsSenderPool" lazy-init="true"></bean>
+    <!--
+    <bean id="gdSmsSender" class="com.athm.push.message.sms.guodu.GDSmsSender">
+        <property name="desUrl" value="http://221.179.180.158:9007/QxtSms/QxtFirewall"/>
+        <property name="timeout" value="2000"/>
+        <property name="errorMapping">
+            <map>
+                <entry key="01" value="10000"></entry>
+                <entry key="03" value="10000"></entry>
+                <entry key="00" value="10001"></entry>
+                <entry key="07" value="10001"></entry>
+                <entry key="08" value="10001"></entry>
+                <entry key="09" value="10001"></entry>
+                <entry key="10" value="10001"></entry>
+                <entry key="-1" value="10002"></entry>
+                <entry key="0" value="10003"></entry>
+            </map>
+        </property>
+        <property name="user" value="qicdf"></property>
+        <property name="password" value="qicdf"></property>
+    </bean>
+    -->
+
+    <bean id="mwSmsSenderPool" class="com.dm.service.mps.biz.message.sms.mengwang.MWSmsSenderPool" lazy-init="true"></bean>
+    <!--<bean id="mwSmsSender" class="com.autohome.pinche.sms.mengwang.MWSmsSender">
+        <property name="desUrl" value="http://61.145.229.29:9003/MWGate/wmgw.asmx/MongateCsSpSendSmsNew"/>
+        <property name="timeout" value="2000"/>
+        <property name="errorMapping">
+            <map>
+                <entry key="0" value="10000"></entry>
+                <entry key="-1" value="10001"></entry>
+                <entry key="-2" value="10001"></entry>
+                <entry key="-10" value="10001"></entry>
+                <entry key="-11" value="10001"></entry>
+                <entry key="-12" value="10001"></entry>
+                <entry key="-13" value="10001"></entry>
+                <entry key="-14" value="10001"></entry>
+                <entry key="-101" value="10001"></entry>
+                <entry key="-102" value="10001"></entry>
+                <entry key="-103" value="10001"></entry>
+                <entry key="-200" value="10002"></entry>
+                <entry key="-999" value="10002"></entry>
+                <entry key="00" value="10003"></entry>
+            </map>
+        </property>
+        <property name="user" value="JC2488"></property>
+        <property name="password" value="582103"></property>
+    </bean>-->
+
+    <bean class="com.dm.service.mps.biz.message.sms.common.SmsSenderPoolFactory">
+        <property name="senders">
+            <map>
+                <entry key="gd" value-ref="gdSmsSenderPool"/>
+                <entry key="mw" value-ref="mwSmsSenderPool"/>
+            </map>
+        </property>
+    </bean>
+
+    <bean id="httpProcessor" class="com.dm.service.mps.biz.message.sms.common.HttpProcessor"/>
+
+    <!-- ============================================================== -->
+    <!-- =========================Sender配置============================ -->
+    <!-- ============================================================== -->
+    <bean id="androidSender" class="com.dm.service.mps.biz.message.sender.impl.AndroidSenderImpl" scope="prototype">
+        <property name="appId" value="${push.android.appId}" />
+        <property name="appKey" value="${push.android.appKey}"/>
+        <property name="priority" value="${push.android.priority}" />
+    </bean>
+    <bean id="gtSender" class="com.dm.service.mps.biz.message.sender.impl.GtSender" scope="prototype">
+        <constructor-arg value="${push.android.host}" />
+        <constructor-arg value="${push.android.appKey}" />
+        <constructor-arg value="${push.android.masterKey}" />
+    </bean>
+    <bean id="iosSender" class="com.dm.service.mps.biz.message.sender.impl.IOSSenderImpl" scope="prototype">
+        <property name="priority" value="${push.ios.priority}" />
+        <property name="batchSize" value="${push.ios.batchsize}" />
+        <property name="apnsServiceMap" ref="apnsServiceMap" />
+    </bean>
+    <util:map id="apnsServiceMap" scope="prototype">
+        <entry key="200010@PROD">
+            <bean class="com.dm.service.mps.biz.message.sender.impl.ApnsSender" scope="prototype" init-method="start" destroy-method="stop">
+                <property name="name" value="个人正式版"/>
+                <property name="certFileName" value="${push.ios.certFileName.4.person.prod}" />
+                <property name="certPwd" value="${push.ios.certPwd.4.person.prod}" />
+                <property name="prod" value="${push.ios.prod}" />
+                <property name="poolSize" value="${push.ios.poolsize.4.person.prod}" />
+            </bean>
+        </entry>
+        <entry key="200010@DEV">
+            <bean class="com.dm.service.mps.biz.message.sender.impl.ApnsSender" scope="prototype" init-method="start" destroy-method="stop">
+                <property name="name" value="个人开发版"/>
+                <property name="certFileName" value="${push.ios.certFileName.4.person.dev}" />
+                <property name="certPwd" value="${push.ios.certPwd.4.person.dev}" />
+                <property name="prod" value="${push.ios.dev}" />
+                <property name="poolSize" value="${push.ios.poolsize.4.person.dev}" />
+            </bean>
+        </entry>
+        <entry key="200011@PROD">
+            <bean class="com.dm.service.mps.biz.message.sender.impl.ApnsSender" scope="prototype" init-method="start" destroy-method="stop">
+                <property name="name" value="企业正式版"/>
+                <property name="certFileName" value="${push.ios.certFileName.4.corp.prod}" />
+                <property name="certPwd" value="${push.ios.certPwd.4.corp.prod}" />
+                <property name="prod" value="${push.ios.prod}" />
+                <property name="poolSize" value="${push.ios.poolsize.4.corp.prod}" />
+            </bean>
+        </entry>
+        <entry key="200011@DEV">
+            <bean class="com.dm.service.mps.biz.message.sender.impl.ApnsSender" scope="prototype" init-method="start" destroy-method="stop">
+                <property name="name" value="企业开发版"/>
+                <property name="certFileName" value="${push.ios.certFileName.4.corp.dev}" />
+                <property name="certPwd" value="${push.ios.certPwd.4.corp.dev}" />
+                <property name="prod" value="${push.ios.dev}" />
+                <property name="poolSize" value="${push.ios.poolsize.4.corp.dev}" />
+            </bean>
+        </entry>
+
+        <entry key="200012@PROD">
+            <bean class="com.dm.service.mps.biz.message.sender.impl.ApnsSender" scope="prototype" init-method="start" destroy-method="stop">
+                <property name="name" value="团队正式版"/>
+                <property name="certFileName" value="${push.ios.certFileName.4.team.prod}" />
+                <property name="certPwd" value="${push.ios.certPwd.4.team.prod}" />
+                <property name="prod" value="${push.ios.prod}" />
+                <property name="poolSize" value="${push.ios.poolsize.4.team.prod}" />
+            </bean>
+        </entry>
+        <entry key="200012@PROD">
+            <bean class="com.dm.service.mps.biz.message.sender.impl.ApnsSender" scope="prototype" init-method="start" destroy-method="stop">
+                <property name="name" value="团队开发版"/>
+                <property name="certFileName" value="${push.ios.certFileName.4.team.dev}" />
+                <property name="certPwd" value="${push.ios.certPwd.4.team.dev}" />
+                <property name="prod" value="${push.ios.dev}" />
+                <property name="poolSize" value="${push.ios.poolsize.4.team.dev}" />
+            </bean>
+        </entry>
+    </util:map>
+    <bean id="smsSender" class="com.dm.service.mps.biz.message.sender.impl.SmsSender" scope="prototype">
+        <property name="smsPreffixDas" value="${push.sms.preffixDas}" />
+        <property name="smsPreffixTFL" value="${push.sms.preffixTFL}"/>
+    </bean>
+    <bean id="voiceSender" class="com.dm.service.mps.biz.message.sender.impl.VoiceSender" scope="prototype" init-method="init">
+        <property name="voiceServiceUser" value="${push.voice.service.user}" />
+        <property name="voiceServicePwd" value="${push.voice.service.pwd}" />
+        <property name="voiceServiceRoleId" value="${push.voice.service.roleid}" />
+        <!--GX增加-->
+        <property name ="voiceServiceEnterpriseId" value="${push.voice.service.enterpriseId}" />
+        <!--<property name="voiceServiceIvrId" value="${push.voice.service.ivrId}" />-->
+        <!--<property name="IvrId4VerCode" value="${push.voice.service.ivrId4VerCode}" />-->
+        <!--<property name="IvrId4AnyThing" value="${push.voice.service.ivrId4AnyThing}" />-->
+        <!--<property name="voiceServiceInterfaceType" value="${push.voice.service.interfaceType}" />-->
+        <!--<property name="voiceServiceCharset" value="push.voice.service.charset" />-->
+
+        <property name="voiceServiceGuid" value="${push.voice.service.guid}" />
+        <property name="voiceServiceCaller" value="${push.voice.service.caller}" />
+        <property name="voiceServiceVoiceFile" value="${push.voice.service.voicefile}" />
+        <property name="restfulServiceInvoker" ref="restfulServiceInvoker" />
+    </bean>
+    <bean id="androidFeedbacker" class="com.dm.service.mps.biz.message.feedback.impl.AndroidFeedbacker" scope="prototype">
+        <property name="host" value="${push.android.host}" />
+        <property name="appkey" value="${push.android.appKey}" />
+        <property name="masterKey" value="${push.android.masterKey}" />
+    </bean>
+
+    <bean id="call" class="com.dm.service.mps.biz.impl.PushReqServiceImpl">
+
+
+    </bean>
+    <!-- ============================================================== -->
+    <!-- =========================Startup配置============================ -->
+    <!-- ============================================================== -->
+    <bean id="startup" class="com.dm.service.mps.biz.message.Startup" init-method="start">
+        <property name="androidPushWorkerThread" value="${push.work.pool.android}" />
+        <property name="iosPushWorkerThread" value="${push.work.pool.ios}" />
+        <property name="smsWorkerThread" value="${push.work.pool.sms}" />
+        <property name="voiceWorkerThread" value="${push.work.pool.voice}" />
+        <property name="dispatchWorkerThread" value="${push.work.pool.dispatcher}" />
+    </bean>
+
+</beans>
